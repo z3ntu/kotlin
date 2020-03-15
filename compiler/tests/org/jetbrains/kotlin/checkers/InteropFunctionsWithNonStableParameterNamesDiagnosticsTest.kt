@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingTrace
+import org.jetbrains.kotlin.resolve.CompilerEnvironment
 import org.jetbrains.kotlin.resolve.PlatformDependentAnalyzerServices
 import org.jetbrains.kotlin.serialization.NonStableParameterNamesSerializationTest
 import org.jetbrains.kotlin.storage.StorageManager
@@ -64,6 +65,7 @@ class InteropFunctionsWithNonStableParameterNamesDiagnosticsTest : AbstractDiagn
             dependOnBuiltIns = true,
             languageVersionSettings = languageVersionSettings,
             targetPlatform = CommonPlatforms.defaultCommonPlatform,
+            targetEnvironment = CompilerEnvironment,
             capabilities = mapOf(
 //                MODULE_FILES to files
             ),

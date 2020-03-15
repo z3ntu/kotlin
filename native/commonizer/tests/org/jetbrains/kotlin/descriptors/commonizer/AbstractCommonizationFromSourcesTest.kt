@@ -34,6 +34,7 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.CommonPlatforms
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.CompilerEnvironment
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.test.KotlinTestUtils.newConfiguration
 import org.jetbrains.kotlin.test.testFramework.KtUsefulTestCase
@@ -323,6 +324,7 @@ private class AnalyzedModules(
                 dependOnBuiltIns = true,
                 languageVersionSettings = environment.configuration.languageVersionSettings,
                 targetPlatform = CommonPlatforms.defaultCommonPlatform,
+                targetEnvironment = CompilerEnvironment,
                 dependenciesContainer = DependenciesContainerImpl(sharedTarget, currentTarget, dependencies)
             ) { content ->
                 environment.createPackagePartProvider(content.moduleContentScope)
