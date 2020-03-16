@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.library.metadata.NativeTypeTransformer
 import org.jetbrains.kotlin.library.metadata.NullFlexibleTypeDeserializer
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.CommonPlatforms
+import org.jetbrains.kotlin.resolve.CompilerEnvironment
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.util.DummyLogger
 import java.io.File
@@ -55,7 +56,8 @@ object KlibTestUtil {
                 moduleName = Name.special("<$libraryName>"),
                 dependOnBuiltIns = true,
                 languageVersionSettings = environment.configuration.languageVersionSettings,
-                targetPlatform = CommonPlatforms.defaultCommonPlatform
+                targetPlatform = CommonPlatforms.defaultCommonPlatform,
+                targetEnvironment = CompilerEnvironment,
             ) { content ->
                 environment.createPackagePartProvider(content.moduleContentScope)
             }.moduleDescriptor

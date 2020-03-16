@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.frontend.di
 
+import org.jetbrains.kotlin.cfg.ControlFlowInformationProvider
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.isTypeRefinementEnabled
 import org.jetbrains.kotlin.container.StorageComponentContainer
@@ -184,7 +185,8 @@ fun createContainerForLazyLocalClassifierAnalyzer(
     languageVersionSettings: LanguageVersionSettings,
     statementFilter: StatementFilter,
     localClassDescriptorHolder: LocalClassDescriptorHolder,
-    analyzerServices: PlatformDependentAnalyzerServices
+    analyzerServices: PlatformDependentAnalyzerServices,
+    controlFlowInformationProviderFactory: ControlFlowInformationProvider.Factory
 ): StorageComponentContainer = createContainer("LocalClassifierAnalyzer", analyzerServices) {
     configureModule(moduleContext, platform, analyzerServices, bindingTrace, languageVersionSettings)
 
@@ -197,6 +199,7 @@ fun createContainerForLazyLocalClassifierAnalyzer(
     useInstance(NoTopLevelDescriptorProvider)
 
     TargetEnvironment.configureCompilerEnvironment(this)
+    useInstance(controlFlowInformationProviderFactory)
 
     useInstance(FileScopeProvider.ThrowException)
     useImpl<AnnotationResolverImpl>()

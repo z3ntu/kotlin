@@ -222,7 +222,7 @@ class ClassicFrontendFacade(
         files: List<KtFile>,
         dependentDescriptors: List<ModuleDescriptorImpl>
     ): AnalysisResult {
-        val jsConfig = JsConfig(project, configuration)
+        val jsConfig = JsConfig(project, configuration, CompilerEnvironment)
         val dependentDescriptorsIncludingLibraries = buildList {
             addAll(dependentDescriptors)
             addAll(jsConfig.moduleDescriptors)
@@ -232,7 +232,8 @@ class ClassicFrontendFacade(
             project,
             configuration,
             moduleDescriptors = dependentDescriptorsIncludingLibraries,
-            friendModuleDescriptors = emptyList()
+            friendModuleDescriptors = emptyList(),
+            CompilerEnvironment,
         )
     }
 
@@ -263,8 +264,9 @@ class ClassicFrontendFacade(
             dependOnBuiltIns = true,
             module.languageVersionSettings,
             module.targetPlatform,
+            CompilerEnvironment,
             // TODO: add dependency manager
-        ) { _ ->
+        ) {
             // TODO
             MetadataPartProvider.Empty
         }
