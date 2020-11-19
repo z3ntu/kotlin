@@ -9,15 +9,16 @@ import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.diagnostics.DiagnosticSink
 import org.jetbrains.kotlin.diagnostics.Errors
+import org.jetbrains.kotlin.utils.threadLocal
 import java.util.*
 
 class GlobalInlineContext(private val diagnostics: DiagnosticSink) {
     // Ordered set of declarations and inline calls being generated right now.
     // No call in it should point to a declaration that's before it in the stack.
-    private val inlineCallsAndDeclarations = LinkedList<Any? /* CallableDescriptor | PsiElement? */>()
-    private val inlineDeclarationSet = mutableSetOf<CallableDescriptor>()
+    private val inlineCallsAndDeclarations by threadLocal { LinkedList<Any? /* CallableDescriptor | PsiElement? */>() }
+    private val inlineDeclarationSet by threadLocal { mutableSetOf<CallableDescriptor>() }
 
-    private val typesUsedInInlineFunctions = LinkedList<MutableSet<String>>()
+    private val typesUsedInInlineFunctions by threadLocal { LinkedList<MutableSet<String>>() }
 
     fun enterDeclaration(descriptor: CallableDescriptor) {
         assert(descriptor.original !in inlineDeclarationSet) { "entered inlining cycle on $descriptor" }
@@ -30,13 +31,11 @@ class GlobalInlineContext(private val diagnostics: DiagnosticSink) {
     }
 
     inline fun withDeclaration(descriptor: CallableDescriptor, block: () -> Unit) {
-        synchronized(this) {
-            enterDeclaration(descriptor)
-            try {
-                block()
-            } finally {
-                exitDeclaration()
-            }
+        enterDeclaration(descriptor)
+        try {
+            block()
+        } finally {
+            exitDeclaration()
         }
     }
 
@@ -63,12 +62,10 @@ class GlobalInlineContext(private val diagnostics: DiagnosticSink) {
     }
 
     inline fun withInlining(callee: CallableDescriptor?, element: PsiElement?, block: () -> Unit): Boolean {
-        synchronized(this) {
-            if (!enterIntoInlining(callee, element)) return false
-            block()
-            exitFromInlining()
-            return true
-        }
+        if (!enterIntoInlining(callee, element)) return false
+        block()
+        exitFromInlining()
+        return true
     }
 
     fun recordTypeFromInlineFunction(type: String) = typesUsedInInlineFunctions.peek().add(type)

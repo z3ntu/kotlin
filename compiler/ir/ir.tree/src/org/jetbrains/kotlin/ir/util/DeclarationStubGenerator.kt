@@ -63,7 +63,7 @@ class DeclarationStubGenerator(
             lazyTable,
             languageVersionSettings,
             moduleDescriptor.builtIns,
-            LazyScopedTypeParametersResolver(lazyTable),
+            { LazyScopedTypeParametersResolver(lazyTable) },
             true,
             extensions
         )

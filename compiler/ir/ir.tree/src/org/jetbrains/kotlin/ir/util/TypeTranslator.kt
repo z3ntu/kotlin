@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
-import org.jetbrains.kotlin.ir.IrLock
 import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
@@ -24,6 +23,7 @@ import org.jetbrains.kotlin.ir.types.impl.*
 import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.typesApproximation.approximateCapturedTypes
+import org.jetbrains.kotlin.utils.threadLocal
 import java.util.*
 
 /*
@@ -35,10 +35,12 @@ class TypeTranslator(
     private val symbolTable: ReferenceSymbolTable,
     val languageVersionSettings: LanguageVersionSettings,
     builtIns: KotlinBuiltIns,
-    private val typeParametersResolver: TypeParametersResolver = ScopedTypeParametersResolver(),
+    typeParametersResolverBuilder: () -> TypeParametersResolver = { ScopedTypeParametersResolver() },
     private val enterTableScope: Boolean = false,
     private val extensions: StubGeneratorExtensions = StubGeneratorExtensions.EMPTY
 ) {
+
+    private val typeParametersResolver by threadLocal { typeParametersResolverBuilder() }
 
     private val erasureStack = Stack<PropertyDescriptor>()
 
@@ -69,12 +71,10 @@ class TypeTranslator(
     }
 
     inline fun <T> buildWithScope(container: IrTypeParametersContainer, builder: () -> T): T {
-        synchronized(IrLock) {
-            enterScope(container)
-            val result = builder()
-            leaveScope(container)
-            return result
-        }
+        enterScope(container)
+        val result = builder()
+        leaveScope(container)
+        return result
     }
 
     private fun resolveTypeParameter(typeParameterDescriptor: TypeParameterDescriptor): IrTypeParameterSymbol {
@@ -84,9 +84,7 @@ class TypeTranslator(
     }
 
     fun translateType(kotlinType: KotlinType): IrType =
-        synchronized(IrLock) {
-            translateType(kotlinType, Variance.INVARIANT).type
-        }
+        translateType(kotlinType, Variance.INVARIANT).type
 
     private fun translateType(kotlinType: KotlinType, variance: Variance): IrTypeProjection {
         val approximatedType = approximate(kotlinType)
