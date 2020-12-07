@@ -1827,16 +1827,6 @@ public class FirOldFrontendDiagnosticsTestWithStdlibGenerated extends AbstractFi
             runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/suspendCoroutineOrReturn_1_2.kt");
         }
 
-        @TestMetadata("suspendCoroutineUnavailableWithNewAPI.kt")
-        public void testSuspendCoroutineUnavailableWithNewAPI() throws Exception {
-            runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/suspendCoroutineUnavailableWithNewAPI.kt");
-        }
-
-        @TestMetadata("suspendCoroutineUnavailableWithOldAPI.kt")
-        public void testSuspendCoroutineUnavailableWithOldAPI() throws Exception {
-            runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/suspendCoroutineUnavailableWithOldAPI.kt");
-        }
-
         @TestMetadata("suspendCovarianJavaOverride.kt")
         public void testSuspendCovarianJavaOverride() throws Exception {
             runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/suspendCovarianJavaOverride.kt");
@@ -2328,16 +2318,6 @@ public class FirOldFrontendDiagnosticsTestWithStdlibGenerated extends AbstractFi
                 KotlinTestUtils.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/testsWithStdLib/coroutines/release"), Pattern.compile("^(.+)\\.kt$"), Pattern.compile("^(.+)\\.fir\\.kts?$"), true);
             }
 
-            @TestMetadata("coroutineContext.kt")
-            public void testCoroutineContext() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/release/coroutineContext.kt");
-            }
-
-            @TestMetadata("languageVersionIsNotEqualToApiVersion.kt")
-            public void testLanguageVersionIsNotEqualToApiVersion() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/release/languageVersionIsNotEqualToApiVersion.kt");
-            }
-
             @TestMetadata("suspend.kt")
             public void testSuspend() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/release/suspend.kt");
@@ -2374,11 +2354,6 @@ public class FirOldFrontendDiagnosticsTestWithStdlibGenerated extends AbstractFi
             @TestMetadata("notRelatedFun.kt")
             public void testNotRelatedFun() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/restrictSuspension/notRelatedFun.kt");
-            }
-
-            @TestMetadata("outerYield_1_2.kt")
-            public void testOuterYield_1_2() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/restrictSuspension/outerYield_1_2.kt");
             }
 
             @TestMetadata("outerYield_1_3.kt")
@@ -2505,11 +2480,6 @@ public class FirOldFrontendDiagnosticsTestWithStdlibGenerated extends AbstractFi
             @TestMetadata("localFunctions.kt")
             public void testLocalFunctions() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/tailCalls/localFunctions.kt");
-            }
-
-            @TestMetadata("nothingTypedSuspendFunction_1_2.kt")
-            public void testNothingTypedSuspendFunction_1_2() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/coroutines/tailCalls/nothingTypedSuspendFunction_1_2.kt");
             }
 
             @TestMetadata("nothingTypedSuspendFunction_1_3.kt")
