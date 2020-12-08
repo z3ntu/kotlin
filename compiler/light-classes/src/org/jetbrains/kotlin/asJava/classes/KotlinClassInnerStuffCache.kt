@@ -102,19 +102,19 @@ class KotlinClassInnerStuffCache(
 
     private fun getAllFields(): Array<PsiField> {
         val own = myClass.ownFields
-        val ext = PsiAugmentProvider.collectAugments(myClass, PsiField::class.java)
+        val ext = PsiAugmentProvider.collectAugments(myClass, PsiField::class.java, null)
         return ArrayUtil.mergeCollections(own, ext, PsiField.ARRAY_FACTORY)
     }
 
     private fun getAllMethods(): Array<PsiMethod> {
         val own = myClass.ownMethods
-        val ext = PsiAugmentProvider.collectAugments(myClass, PsiMethod::class.java)
+        val ext = PsiAugmentProvider.collectAugments(myClass, PsiMethod::class.java, null)
         return ArrayUtil.mergeCollections(own, ext, PsiMethod.ARRAY_FACTORY)
     }
 
     private fun getAllInnerClasses(): Array<PsiClass> {
         val own = myClass.ownInnerClasses
-        val ext = PsiAugmentProvider.collectAugments(myClass, PsiClass::class.java)
+        val ext = PsiAugmentProvider.collectAugments(myClass, PsiClass::class.java, null)
         return ArrayUtil.mergeCollections(own, ext, PsiClass.ARRAY_FACTORY)
     }
 

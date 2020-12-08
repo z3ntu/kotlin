@@ -18,7 +18,6 @@ package org.jetbrains.kotlin.resolve.diagnostics;
 
 import com.intellij.openapi.util.AtomicNotNullLazyValue;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.containers.ConcurrentMultiMap;
 import com.intellij.util.containers.MultiMap;
 import kotlin.collections.CollectionsKt;
 import kotlin.jvm.functions.Function1;
@@ -50,7 +49,7 @@ public class DiagnosticsElementsCache {
     }
 
     private static MultiMap<PsiElement, Diagnostic> buildElementToDiagnosticCache(Diagnostics diagnostics, Function1<Diagnostic, Boolean> filter) {
-        MultiMap<PsiElement, Diagnostic> elementToDiagnostic = new ConcurrentMultiMap<>();
+        MultiMap<PsiElement, Diagnostic> elementToDiagnostic = MultiMap.createConcurrent();
         for (Diagnostic diagnostic : diagnostics) {
             if (diagnostic == null) {
                 throw new IllegalStateException(
