@@ -1,3 +1,4 @@
+// !SKIP_JAVAC
 // FIR_IDENTICAL
 // !LANGUAGE: +InlineClasses
 
