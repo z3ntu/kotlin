@@ -84,10 +84,6 @@ fun main(args: Array<String>) {
                 model("diagnostics/testWithModifiedMockJdk")
             }
 
-            testClass<AbstractDiagnosticsWithUnsignedTypes> {
-                model("diagnostics/testsWithUnsignedTypes")
-            }
-
             testClass<AbstractDiagnosticsTestWithOldJvmBackend> {
                 model("diagnostics/testsWithJvmBackend", targetBackend = TargetBackend.JVM_OLD)
             }
