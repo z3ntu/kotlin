@@ -31,6 +31,9 @@ interface Mapping {
         operator fun setValue(thisRef: K, desc: KProperty<*>, value: V?) {
             set(thisRef, value)
         }
+
+        abstract val keys: Set<K>
+        abstract val values: Collection<V>
     }
 }
 
@@ -59,6 +62,12 @@ open class DefaultMapping : Mapping {
                 map[key] = value
             }
         }
+
+        override val keys: Set<K>
+            get() = map.keys
+
+        override val values: Collection<V>
+            get() = map.values
     }
 }
 

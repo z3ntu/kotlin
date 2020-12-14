@@ -13,6 +13,17 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.expressions.IrCall
+import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.util.DeepCopySymbolRemapper
+import org.jetbrains.kotlin.ir.util.copyTypeAndValueArgumentsFrom
+import org.jetbrains.kotlin.ir.util.deepCopyForParallelLowering
+import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
+import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -132,15 +143,44 @@ private class PerformByIrFilePhase<Context : CommonBackendContext>(
     private fun invokeSequential(
         phaseConfig: PhaseConfig, phaserState: PhaserState<IrModuleFragment>, context: Context, input: IrModuleFragment
     ): IrModuleFragment {
-        for (irFile in input.files) {
+        val remappedFunctions = mutableMapOf<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>()
+        val remappedClasses = mutableMapOf<IrClassSymbol, IrClassSymbol>()
+        val newIrFiles = input.files.map { irFile ->
             try {
+                val symbolRemapper = DeepCopySymbolRemapperSavingFunctions()
+                val newIrFile = irFile // .deepCopyWithMetadata(symbolRemapper = symbolRemapper)
                 for (phase in lower) {
-                    phase.invoke(phaseConfig, phaserState.changeType(), context, irFile)
+                    phase.invoke(phaseConfig, phaserState.changeType(), context, newIrFile)
                 }
+
+                for (function in symbolRemapper.declaredFunctions) {
+                    remappedFunctions[function] = symbolRemapper.getReferencedSimpleFunction(function)
+                }
+
+                for (klass in symbolRemapper.declaredClasses) {
+                    remappedClasses[klass] = symbolRemapper.getReferencedClass(klass)
+                }
+
+                newIrFile
             } catch (e: Throwable) {
                 CodegenUtil.reportBackendException(e, "IR lowering", irFile.fileEntry.name)
             }
         }
+
+        input.files.clear()
+        input.files.addAll(newIrFiles)
+
+        // Update functionSymbolMap for default argument stubs.
+        for (defaultStub in context.mapping.defaultArgumentsOriginalFunction.keys) {
+            if (defaultStub !is IrSimpleFunction) continue
+            val original = context.mapping.defaultArgumentsOriginalFunction[defaultStub] as? IrSimpleFunction ?: continue
+            val originalNew = remappedFunctions[original.symbol]?.owner ?: continue
+            val defaultStubNew = context.mapping.defaultArgumentsDispatchFunction[originalNew] ?: continue
+            remappedFunctions[defaultStub.symbol] = defaultStubNew.symbol as IrSimpleFunctionSymbol
+        }
+
+        input.transformChildrenVoid(CrossFileCallAdjuster(remappedFunctions))
+        context.handleDeepCopy(remappedClasses, remappedFunctions)
 
         // TODO: no guarantee that module identity is preserved by `lower`
         return input
@@ -155,7 +195,7 @@ private class PerformByIrFilePhase<Context : CommonBackendContext>(
         val thrownFromThread = AtomicReference<Pair<Throwable, IrFile>?>(null)
 
         // Each thread needs its own copy of phaserState.alreadyDone
-        val filesAndStates = input.files.map { it to phaserState.clone() }
+        val filesAndStates = input.files.map { it.deepCopyForParallelLowering() to phaserState.clone() }
 
         val executor = Executors.newFixedThreadPool(nThreads)
         for ((irFile, state) in filesAndStates) {
@@ -178,6 +218,9 @@ private class PerformByIrFilePhase<Context : CommonBackendContext>(
 
         // Presumably each thread has run through the same list of phases.
         phaserState.alreadyDone.addAll(filesAndStates[0].second.alreadyDone)
+
+        input.files.clear()
+        input.files.addAll(filesAndStates.map { (irFile, _) -> irFile }.toMutableList())
 
         // TODO: no guarantee that module identity is preserved by `lower`
         return input
@@ -254,3 +297,39 @@ fun <Context : CommonBackendContext, OldData, NewData> transform(op: (OldData) -
     object : CompilerPhase<Context, OldData, NewData> {
         override fun invoke(phaseConfig: PhaseConfig, phaserState: PhaserState<OldData>, context: Context, input: OldData) = op(input)
     }
+
+// We need to remap inline function calls after lowering files
+private class DeepCopySymbolRemapperSavingFunctions : DeepCopySymbolRemapper() {
+    val declaredFunctions = mutableSetOf<IrSimpleFunctionSymbol>()
+    val declaredClasses = mutableSetOf<IrClassSymbol>()
+
+    override fun getDeclaredFunction(symbol: IrSimpleFunctionSymbol): IrSimpleFunctionSymbol {
+        declaredFunctions.add(symbol)
+        return super.getDeclaredFunction(symbol)
+    }
+
+    override fun getDeclaredClass(symbol: IrClassSymbol): IrClassSymbol {
+        declaredClasses.add(symbol)
+        return super.getDeclaredClass(symbol)
+    }
+}
+
+private class CrossFileCallAdjuster(
+    val remappedFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>
+) : IrElementTransformerVoid() {
+    override fun visitCall(expression: IrCall): IrExpression {
+        expression.transformChildrenVoid(this)
+        return remappedFunctions[expression.symbol]?.let { newSymbol ->
+            with(expression) {
+                IrCallImpl(
+                    startOffset, endOffset, type,
+                    newSymbol,
+                    typeArgumentsCount, valueArgumentsCount, origin,
+                    superQualifierSymbol // TODO
+                ).apply {
+                    copyTypeAndValueArgumentsFrom(expression)
+                }
+            }
+        } ?: expression
+    }
+}
