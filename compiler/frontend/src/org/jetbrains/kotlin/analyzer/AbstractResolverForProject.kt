@@ -170,10 +170,50 @@ abstract class AbstractResolverForProject<M : ModuleInfo>(
         val moduleFromThisResolver = moduleInfoToResolvableInfo[module]
             ?: return delegateResolver.descriptorForModule(module) as ModuleDescriptorImpl
 
+        /*
+        * We can't simply use `getOrPut` here because of potential rewrite in [AbstractResolverForProject#createModuleDescriptor].
+        * Dependency chain JvmBuiltins(FROM_DEPENDENCIES) -> SDK -> JvmBuiltins(FROM_CLASSLOADER) -> SDK is the cause.
+        *
+        * Double check becomes necessary when we start creating [JvmBuiltins] for SDKs differently from built-ins for modules.
+        * The motivation is to load built-ins from module dependencies instead of classloader (see KT-33233) in IDE.
+        * SDKs can't have Kotlin stdlib in dependencies, so for them built-ins are still loaded from classloader.
+        *
+        * Before the changes both modules and SDKs used to have the same built-ins.
+        * Now they don't and we get the following chain of events, which starts in `BuiltInsCache`:
+        * - begin creating JvmBuiltins(FROM_DEPENDENCIES) for JVM module - can find stdlib and SDK in module dependencies
+        * - put the created uninitialized built-ins in cache
+        * - start resolving SDK's [ModuleDescriptor] for the created built-ins to finish their initialization
+        * - SDK's [ModuleDescriptor] needs built-ins just as any other module and there are no suitable in cache
+        * - create new JVM built-ins from classloader - they also need SDK
+        * - resolve [ModuleDescriptor] for the same SDK. We haven't finished creating the first [ModuleDescriptor],
+        *   but begin creating a second one
+        * - Finish creating the second [ModuleDescriptor] for SDK and store it in [AbstractResolverForProject#descriptorByModule]
+        *   using SdkInfo as a key
+        * - Finish creating first module descriptor for SDK and put it under the same [SdkInfo] key, re-writing previous value
+
+        * * From this point on we have two different module descriptors for SDK but only one of them (the one that was created first)
+        * is in [AbstractResolverForProject#descriptorByModule]. The unregistered [ModuleDescriptor] will fail upon the first use
+        * as it won't contain itself in dependencies ([AbstractResolverForProject] holds the different descriptor for its [SdkInfo]).
+        *
+        * To avoid this problem we make the second check - [AbstractResolverForProject#createModuleDescriptor] might have written
+        * a descriptor for the [ModuleInfo] key we are processing.
+        */
         return projectContext.storageManager.compute {
-            var moduleData = descriptorByModule.getOrPut(moduleFromThisResolver) {
-                createModuleDescriptor(moduleFromThisResolver)
+            var moduleData = descriptorByModule[moduleFromThisResolver]
+
+            if (moduleData == null) {
+                val newModuleData = createModuleDescriptor(moduleFromThisResolver)
+
+                moduleData = descriptorByModule[moduleFromThisResolver]
+
+                if (moduleData == null) {
+                    descriptorByModule[moduleFromThisResolver] = newModuleData
+                    moduleData = newModuleData
+                } else {
+                    moduleInfoByDescriptor.remove(newModuleData.moduleDescriptor)
+                }
             }
+
             if (moduleData.isOutOfDate()) {
                 moduleData = recreateModuleDescriptor(moduleFromThisResolver)
             }

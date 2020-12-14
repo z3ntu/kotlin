@@ -92,9 +92,14 @@ class NativePlatformKindResolution : IdePlatformKindResolution {
 
     override val kind get() = NativeIdePlatformKind
 
-    override fun getKeyForBuiltIns(moduleInfo: ModuleInfo, sdkInfo: SdkInfo?): BuiltInsCacheKey = NativeBuiltInsCacheKey
+    override fun getKeyForBuiltIns(moduleInfo: ModuleInfo, sdkInfo: SdkInfo?, stdlibInfo: LibraryInfo?): BuiltInsCacheKey = NativeBuiltInsCacheKey
 
-    override fun createBuiltIns(moduleInfo: ModuleInfo, projectContext: ProjectContext, sdkDependency: SdkInfo?) =
+    override fun createBuiltIns(
+        moduleInfo: ModuleInfo,
+        projectContext: ProjectContext,
+        sdkDependency: SdkInfo?,
+        stdlibDependency: LibraryInfo?,
+    ) =
         createKotlinNativeBuiltIns(moduleInfo, projectContext)
 
     private fun createKotlinNativeBuiltIns(moduleInfo: ModuleInfo, projectContext: ProjectContext): KotlinBuiltIns {

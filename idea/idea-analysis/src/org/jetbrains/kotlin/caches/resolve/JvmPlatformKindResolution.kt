@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.caches.resolve
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.roots.libraries.Library
@@ -20,12 +21,15 @@ import org.jetbrains.kotlin.context.ProjectContext
 import org.jetbrains.kotlin.idea.caches.project.LibraryInfo
 import org.jetbrains.kotlin.idea.caches.project.SdkInfo
 import org.jetbrains.kotlin.idea.caches.resolve.BuiltInsCacheKey
+import org.jetbrains.kotlin.idea.configuration.IdeBuiltInsLoadingState
 import org.jetbrains.kotlin.platform.TargetPlatform
 import org.jetbrains.kotlin.platform.impl.JvmIdePlatformKind
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.resolve.TargetEnvironment
 import org.jetbrains.kotlin.resolve.jvm.JvmPlatformParameters
 import org.jetbrains.kotlin.resolve.jvm.JvmResolverForModuleFactory
+
+private val LOG = Logger.getInstance(JvmPlatformKindResolution::class.java)
 
 class JvmPlatformKindResolution : IdePlatformKindResolution {
     override fun isLibraryFileForPlatform(virtualFile: VirtualFile): Boolean {
@@ -48,18 +52,36 @@ class JvmPlatformKindResolution : IdePlatformKindResolution {
 
     override val kind get() = JvmIdePlatformKind
 
-    override fun getKeyForBuiltIns(moduleInfo: ModuleInfo, sdkInfo: SdkInfo?): BuiltInsCacheKey {
-        return if (sdkInfo != null) CacheKeyBySdk(sdkInfo.sdk) else BuiltInsCacheKey.DefaultBuiltInsKey
+    override fun getKeyForBuiltIns(moduleInfo: ModuleInfo, sdkInfo: SdkInfo?, stdlibInfo: LibraryInfo?): BuiltInsCacheKey {
+        if (IdeBuiltInsLoadingState.isFromClassLoader && stdlibInfo != null) {
+            LOG.error("Standard library ${stdlibInfo.displayedName} provided for built-ins, but loading from dependencies is disabled")
+        }
+
+        return if (sdkInfo != null)
+            CacheKeyByBuiltInsDependencies(sdkInfo.sdk, stdlibInfo)
+        else BuiltInsCacheKey.DefaultBuiltInsKey
     }
 
-    override fun createBuiltIns(moduleInfo: ModuleInfo, projectContext: ProjectContext, sdkDependency: SdkInfo?): KotlinBuiltIns {
-        return if (sdkDependency != null)
-            JvmBuiltIns(projectContext.storageManager, JvmBuiltIns.Kind.FROM_CLASS_LOADER)
-        else
-            DefaultBuiltIns.Instance
+    override fun createBuiltIns(
+        moduleInfo: ModuleInfo,
+        projectContext: ProjectContext,
+        sdkDependency: SdkInfo?,
+        stdlibDependency: LibraryInfo?,
+    ): KotlinBuiltIns {
+        return when {
+            sdkDependency == null -> DefaultBuiltIns.Instance
+            stdlibDependency == null || moduleInfo is SdkInfo ->
+                JvmBuiltIns(projectContext.storageManager, JvmBuiltIns.Kind.FROM_CLASS_LOADER)
+            else -> {
+                if (IdeBuiltInsLoadingState.isFromClassLoader) {
+                    LOG.error("Incorrect attempt to create built-ins from module dependencies")
+                }
+                JvmBuiltIns(projectContext.storageManager, JvmBuiltIns.Kind.FROM_DEPENDENCIES)
+            }
+        }
     }
 
-    data class CacheKeyBySdk(val sdk: Sdk) : BuiltInsCacheKey
+    data class CacheKeyByBuiltInsDependencies(val sdk: Sdk, val stdlib: LibraryInfo?) : BuiltInsCacheKey
 }
 
 class JvmLibraryInfo(project: Project, library: Library) : LibraryInfo(project, library) {
