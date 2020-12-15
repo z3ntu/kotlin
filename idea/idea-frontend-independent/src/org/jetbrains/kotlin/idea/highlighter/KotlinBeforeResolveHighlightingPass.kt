@@ -46,10 +46,10 @@ class KotlinBeforeResolveHighlightingPass(file: KtFile, document: Document) : Ab
         override fun registerHighlightingPassFactory(registrar: TextEditorHighlightingPassRegistrar, project: Project) {
             registrar.registerTextEditorHighlightingPass(
                 Factory(),
-                TextEditorHighlightingPassRegistrar.Anchor.BEFORE,
-                Pass.UPDATE_FOLDING,
-                false,
-                false
+                /* anchor = */ TextEditorHighlightingPassRegistrar.Anchor.BEFORE,
+                /* anchorPassId = */ Pass.UPDATE_FOLDING,
+                /* needAdditionalIntentionsPass = */ false,
+                /* inPostHighlightingPass = */ false
             )
         }
     }

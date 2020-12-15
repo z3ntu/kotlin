@@ -45,17 +45,7 @@ internal class ElementAnnotator(
         annotationBuilderByDiagnostic: MutableMap<Diagnostic, AnnotationBuilder>? = null,
         noFixes: Boolean
     ) {
-        if (checkIsValid(diagnostics)) return
-
-        val diagnostic = diagnostics.first()
-        val factory = diagnostic.factory
-
-        assert(diagnostics.all { it.psiElement == element && it.factory == factory })
-
-        // hack till the root cause #KT-21246 is fixed
-        if (isIrCompileClassDiagnosticForModulesWithEnabledIR(diagnostic)) return
-
-        val presentationInfo = presentationInfo(diagnostic) ?: return
+        val presentationInfo = presentationInfo(diagnostics) ?: return
         setUpAnnotations(holder, diagnostics, presentationInfo, annotationBuilderByDiagnostic, noFixes)
     }
 
@@ -69,19 +59,7 @@ internal class ElementAnnotator(
         diagnostics: List<Diagnostic>,
         annotationBuilderByDiagnostic: MutableMap<Diagnostic, AnnotationBuilder>
     ) {
-        if (checkIsValid(diagnostics)) return
-
-        val presentationInfo = run {
-            val diagnostic = diagnostics.first()
-            val factory = diagnostic.factory
-
-            assert(diagnostics.all { it.psiElement == element && it.factory == factory })
-            // hack till the root cause #KT-21246 is fixed
-            if (isIrCompileClassDiagnosticForModulesWithEnabledIR(diagnostic)) return
-
-            presentationInfo(diagnostic) ?: return
-        }
-
+        val presentationInfo = presentationInfo(diagnostics) ?: return
         val fixesMap = createFixesMap(diagnostics) ?: return
 
         diagnostics.forEach {
@@ -91,13 +69,17 @@ internal class ElementAnnotator(
         }
     }
 
-    private fun checkIsValid(diagnostics: Collection<Diagnostic>): Boolean {
-        assert(diagnostics.isNotEmpty())
-        return !diagnostics.any { it.isValid }
-    }
+    private fun presentationInfo(diagnostics: Collection<Diagnostic>): AnnotationPresentationInfo? {
+        if (diagnostics.isEmpty() || !diagnostics.any { it.isValid }) return null
 
-    private fun presentationInfo(diagnostic: Diagnostic): AnnotationPresentationInfo? {
+        val diagnostic = diagnostics.first()
+        // hack till the root cause #KT-21246 is fixed
+        if (isIrCompileClassDiagnosticForModulesWithEnabledIR(diagnostic)) return null
+
         val factory = diagnostic.factory
+
+        assert(diagnostics.all { it.psiElement == element && it.factory == factory })
+
         val ranges = diagnostic.textRanges
         val presentationInfo: AnnotationPresentationInfo = when (factory.severity) {
             Severity.ERROR -> {
@@ -174,22 +156,18 @@ internal class ElementAnnotator(
     private fun createFixesMap(
         diagnostics: Collection<Diagnostic>,
         noFixes: Boolean = false
-    ): MultiMap<Diagnostic, IntentionAction>? {
-        val fixesMap =
-            if (noFixes) {
-                null
-            } else {
-                try {
-                    createQuickFixes(diagnostics)
-                } catch (e: Exception) {
-                    if (e is ControlFlowException) {
-                        throw e
-                    }
-                    LOG.error(e)
-                    MultiMap<Diagnostic, IntentionAction>()
-                }
+    ): MultiMap<Diagnostic, IntentionAction>? = if (noFixes) {
+        null
+    } else {
+        try {
+            createQuickFixes(diagnostics)
+        } catch (e: Exception) {
+            if (e is ControlFlowException) {
+                throw e
             }
-        return fixesMap
+            LOG.error(e)
+            MultiMap()
+        }
     }
 
     private fun isIrCompileClassDiagnosticForModulesWithEnabledIR(diagnostic: Diagnostic): Boolean {

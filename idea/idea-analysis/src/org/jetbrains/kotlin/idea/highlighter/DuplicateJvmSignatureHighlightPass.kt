@@ -64,10 +64,10 @@ class DuplicateJvmSignatureHighlightPass(file: KtFile, document: Document) :
         override fun registerHighlightingPassFactory(registrar: TextEditorHighlightingPassRegistrar, project: Project) {
             registrar.registerTextEditorHighlightingPass(
                 Factory(),
-                intArrayOf(Pass.UPDATE_ALL),
-                null,
-                false,
-                -1
+                /* runAfterCompletionOf = */ intArrayOf(Pass.UPDATE_ALL),
+                /* runAfterStartingOf = */ null,
+                /* runIntentionsPassAfter = */ false,
+                /* forcedPassId = */ -1
             )
         }
     }

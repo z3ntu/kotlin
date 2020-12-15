@@ -19,7 +19,7 @@ abstract class AbstractBindingContextAwareHighlightingPassBase(
     document: Document
 ) : AbstractHighlightingPassBase(file, document) {
 
-    protected var bindingContext: BindingContext? = null
+    private var bindingContext: BindingContext? = null
 
     protected fun bindingContext(): BindingContext = bindingContext ?: error("bindingContext has to be acquired")
 

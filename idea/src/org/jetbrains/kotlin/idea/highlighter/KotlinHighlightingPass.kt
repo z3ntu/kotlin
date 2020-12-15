@@ -35,10 +35,10 @@ open class KotlinHighlightingPass(file: KtFile, document: Document) : AbstractKo
         override fun registerHighlightingPassFactory(registrar: TextEditorHighlightingPassRegistrar, project: Project) {
             registrar.registerTextEditorHighlightingPass(
                 Factory(),
-                null,
-                intArrayOf(Pass.UPDATE_ALL),
-                false,
-                -1
+                /* runAfterCompletionOf = */ null,
+                /* runAfterStartingOf = */ intArrayOf(Pass.UPDATE_ALL),
+                /* runIntentionsPassAfter = */false,
+                /* forcedPassId = */-1
             )
         }
     }

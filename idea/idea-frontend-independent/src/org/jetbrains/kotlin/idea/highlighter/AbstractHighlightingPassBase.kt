@@ -27,12 +27,11 @@ abstract class AbstractHighlightingPassBase(
     private val enableAnalyze: Boolean = true
 ) : TextEditorHighlightingPass(file.project, document), DumbAware {
 
-    @Volatile
-    protected var annotationCallback: ((Annotation) -> Unit)? = null
-    @Volatile
-    protected var annotationHolder: AnnotationHolderImpl? = null
     private val highlightInfos: MutableList<HighlightInfo> = mutableListOf()
     private val cachedAnnotator by lazy { annotator }
+
+    protected var annotationCallback: ((Annotation) -> Unit)? = null
+    protected var annotationHolder: AnnotationHolderImpl? = null
     protected abstract val annotator: Annotator
 
     fun annotationCallback(callback: (Annotation) -> Unit) {
@@ -82,6 +81,7 @@ abstract class AbstractHighlightingPassBase(
         try {
             val infos = annotationHolder?.map { HighlightInfo.fromAnnotation(it) } ?: return
             highlightInfos.addAll(infos)
+            // NOTE: keep !! for 201 version
             UpdateHighlightersUtil.setHighlightersToEditor(myProject, myDocument!!, 0, file.textLength, infos, colorsScheme, id)
         } finally {
             annotationHolder = null
