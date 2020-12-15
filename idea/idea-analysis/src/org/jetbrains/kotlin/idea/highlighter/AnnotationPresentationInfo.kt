@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.diagnostics.Diagnostic
 import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages
 import org.jetbrains.kotlin.idea.inspections.KotlinUniversalQuickFix
-import org.jetbrains.kotlin.idea.util.application.isInternal
+import org.jetbrains.kotlin.idea.util.application.isApplicationInternalMode
 import org.jetbrains.kotlin.idea.util.application.isUnitTestMode
 
 class AnnotationPresentationInfo(
@@ -94,7 +94,7 @@ class AnnotationPresentationInfo(
 
     private fun getMessage(diagnostic: Diagnostic): String {
         var message = IdeErrorMessages.render(diagnostic)
-        if (isInternal() || isUnitTestMode()) {
+        if (isApplicationInternalMode() || isUnitTestMode()) {
             val factoryName = diagnostic.factory.name
             message = if (message.startsWith("<html>")) {
                 "<html>[$factoryName] ${message.substring("<html>".length)}"
@@ -110,7 +110,7 @@ class AnnotationPresentationInfo(
 
     private fun getDefaultMessage(diagnostic: Diagnostic): String {
         val message = DefaultErrorMessages.render(diagnostic)
-        return if (isInternal() || isUnitTestMode()) {
+        return if (isApplicationInternalMode() || isUnitTestMode()) {
             "[${diagnostic.factory.name}] $message"
         } else {
             message

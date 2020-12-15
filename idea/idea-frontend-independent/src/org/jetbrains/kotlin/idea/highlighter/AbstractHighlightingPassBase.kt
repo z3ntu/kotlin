@@ -20,6 +20,9 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import org.jetbrains.kotlin.psi.KtFile
 
+/**
+ * Single thread model only (as any other [TextEditorHighlightingPass])
+ */
 @Suppress("UnstableApiUsage")
 abstract class AbstractHighlightingPassBase(
     protected val file: KtFile,
