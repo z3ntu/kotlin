@@ -57,7 +57,7 @@ set "KONAN_JAR=%KONAN_LIB%\kotlin-native.jar"
 set TROVE_JAR="%KONAN_LIB%\trove4j.jar"
 
 set "KONAN_CLASSPATH=%KONAN_JAR%;%TROVE_JAR%"
-
+set KONAN_HOME="%_KONAN_HOME%"
 set JAVA_OPTS=-ea ^
     -Xmx3G ^
     -XX:TieredStopAtLevel=1 ^

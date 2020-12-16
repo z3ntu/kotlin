@@ -42,6 +42,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 import org.jetbrains.kotlin.konan.target.buildDistribution
 import org.jetbrains.kotlin.konan.target.customerDistribution
 import org.jetbrains.kotlin.konan.util.DependencyProcessor
+import org.jetbrains.kotlin.*
 import java.io.File
 import javax.inject.Inject
 
@@ -85,8 +86,7 @@ internal fun Project.setProperty(property: KonanPlugin.ProjectProperty, value: A
 // konanHome extension is set by downloadKonanCompiler task.
 internal val Project.konanHome: String
     get() {
-        assert(hasProperty(KonanPlugin.ProjectProperty.KONAN_HOME))
-        return project.file(getProperty(KonanPlugin.ProjectProperty.KONAN_HOME)).canonicalPath
+        return project.kotlinNativeDist.absolutePath
     }
 
 internal val Project.konanVersion: CompilerVersion
