@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.analyzer
 
+import com.intellij.codeWithMe.getStackTrace
 import com.intellij.openapi.util.ModificationTracker
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.context.ProjectContext
@@ -184,7 +185,7 @@ abstract class AbstractResolverForProject<M : ModuleInfo>(
     private fun recreateModuleDescriptor(module: M): ModuleData {
         val oldDescriptor = descriptorByModule[module]?.moduleDescriptor
         if (oldDescriptor != null) {
-            oldDescriptor.isValid = false
+            oldDescriptor.invalidate(getStackTrace())
             moduleInfoByDescriptor.remove(oldDescriptor)
             resolverByModuleDescriptor.remove(oldDescriptor)
             projectContext.project.messageBus.syncPublisher(ModuleDescriptorListener.TOPIC).moduleDescriptorInvalidated(oldDescriptor)

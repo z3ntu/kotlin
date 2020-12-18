@@ -37,7 +37,7 @@ class ModuleDescriptorImpl @JvmOverloads constructor(
     capabilities: Map<ModuleCapability<*>, Any?> = emptyMap(),
     override val stableName: Name? = null,
 ) : DeclarationDescriptorImpl(Annotations.EMPTY, moduleName), ModuleDescriptor {
-    private val capabilities: Map<ModuleCapability<*>, Any?>
+    private val capabilities: MutableMap<ModuleCapability<*>, Any?>
 
     init {
         if (!moduleName.isSpecial) {
@@ -56,10 +56,13 @@ class ModuleDescriptorImpl @JvmOverloads constructor(
             ?: throw IllegalStateException("Module $id was not initialized by the time it's content without dependencies was queried")
 
     override var isValid: Boolean = true
+        private set
 
     override fun assertValid() {
         if (!isValid) {
-            throw InvalidModuleException("Accessing invalid module descriptor $this")
+            val message = "Accessing invalid module descriptor $this" +
+                    (getCapability(InvalidationStackTraceCapability)?.let { " with invalidation stack trace $it" } ?: "")
+            throw InvalidModuleException(message)
         }
     }
 
@@ -152,6 +155,15 @@ class ModuleDescriptorImpl @JvmOverloads constructor(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> getCapability(capability: ModuleCapability<T>) = capabilities[capability] as? T
+
+    fun invalidate(stackTrace: String? = null) {
+        isValid = false
+        capabilities[InvalidationStackTraceCapability] = stackTrace
+    }
+
+    companion object {
+        val InvalidationStackTraceCapability = ModuleCapability<String>("ModuleInfo")
+    }
 }
 
 interface ModuleDependencies {
