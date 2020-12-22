@@ -66,6 +66,7 @@ extend org.jetbrains.kotlin.metadata.Class {
 
 extend org.jetbrains.kotlin.metadata.Constructor {
   repeated org.jetbrains.kotlin.metadata.Annotation constructor_annotation = 170;
+  optional string constructor_kdoc = 173;
   optional DescriptorUniqId constructor_uniq_id = 172;
 }
 

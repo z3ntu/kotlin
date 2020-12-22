@@ -13,6 +13,7 @@ public final class KlibMetadataProtoBuf {
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.classKdoc);
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.classUniqId);
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.constructorAnnotation);
+    registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.constructorKdoc);
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.constructorUniqId);
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.functionAnnotation);
     registry.add(org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf.functionFile);
@@ -2612,6 +2613,22 @@ public final class KlibMetadataProtoBuf {
         org.jetbrains.kotlin.protobuf.WireFormat.FieldType.MESSAGE,
         false,
         org.jetbrains.kotlin.metadata.ProtoBuf.Annotation.class);
+  public static final int CONSTRUCTOR_KDOC_FIELD_NUMBER = 173;
+  /**
+   * <code>extend .org.jetbrains.kotlin.metadata.Constructor { ... }</code>
+   */
+  public static final
+  org.jetbrains.kotlin.protobuf.GeneratedMessageLite.GeneratedExtension<
+          org.jetbrains.kotlin.metadata.ProtoBuf.Constructor,
+          java.lang.String> constructorKdoc = org.jetbrains.kotlin.protobuf.GeneratedMessageLite
+          .newSingularGeneratedExtension(
+                  org.jetbrains.kotlin.metadata.ProtoBuf.Constructor.getDefaultInstance(),
+                  "",
+                  null,
+                  null,
+                  173,
+                  org.jetbrains.kotlin.protobuf.WireFormat.FieldType.STRING,
+                  java.lang.String.class);
   public static final int CONSTRUCTOR_UNIQ_ID_FIELD_NUMBER = 172;
   /**
    * <code>extend .org.jetbrains.kotlin.metadata.Constructor { ... }</code>

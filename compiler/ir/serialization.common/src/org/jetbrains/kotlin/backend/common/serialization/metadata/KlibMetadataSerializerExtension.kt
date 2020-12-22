@@ -58,6 +58,15 @@ class KlibMetadataSerializerExtension(
         childSerializer.typeTable.serialize()?.let { proto.mergeTypeTable(it) }
     }
 
+    override fun serializeConstructor(
+        descriptor: ConstructorDescriptor,
+        proto: ProtoBuf.Constructor.Builder,
+        childSerializer: DescriptorSerializer
+    ) {
+        descriptor.findKDoc()?.let { proto.setExtension(KlibMetadataProtoBuf.constructorKdoc, it.render()) }
+        super.serializeConstructor(descriptor, proto, childSerializer)
+    }
+
     override fun serializeProperty(
         descriptor: PropertyDescriptor,
         proto: ProtoBuf.Property.Builder,
