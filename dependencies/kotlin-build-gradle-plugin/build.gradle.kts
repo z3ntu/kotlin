@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.jetbrains.kotlin"
-version = "0.0.24"
+version = "0.0.24-minamoto-0"
 
 repositories {
     mavenCentral()
@@ -29,7 +29,8 @@ java {
 
 sourceSets {
     main {
-        java.setSrcDirs(listOf("src"))
+        /*TODO: move version to build-plugin*/
+        java.setSrcDirs(listOf("src", "../../compiler/util-io/src"))
     }
 }
 
