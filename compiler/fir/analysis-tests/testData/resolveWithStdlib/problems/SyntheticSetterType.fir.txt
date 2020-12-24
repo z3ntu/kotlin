@@ -1,0 +1,4 @@
+FILE: test.kt
+    public final fun foo(descriptor: R|PropertyDescriptorImpl|): R|kotlin/Unit| {
+        R|<local>/descriptor|.R|/PropertyDescriptorImpl.overriddenDescriptors| = R|kotlin/collections/emptyList|<R|ft<@FlexibleNullability PropertyDescriptor, PropertyDescriptor?>!|>()
+    }

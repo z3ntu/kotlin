@@ -4890,6 +4890,12 @@ public class FirDiagnosticTestGenerated extends AbstractFirDiagnosticTest {
             }
 
             @Test
+            @TestMetadata("SyntheticSetterType.kt")
+            public void testSyntheticSetterType() throws Exception {
+                runTest("compiler/fir/analysis-tests/testData/resolveWithStdlib/problems/SyntheticSetterType.kt");
+            }
+
+            @Test
             @TestMetadata("TypesEligibleForSimpleVisit.kt")
             public void testTypesEligibleForSimpleVisit() throws Exception {
                 runTest("compiler/fir/analysis-tests/testData/resolveWithStdlib/problems/TypesEligibleForSimpleVisit.kt");
