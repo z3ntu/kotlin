@@ -54,8 +54,11 @@ val validPropertiesNames = listOf("kotlin.native.home",
                                   "org.jetbrains.kotlin.native.home",
                                   "konan.home")
 
-val Project.clangPath
-    get() = "${platformManager.hostPlatform.clang.binDir}"
+val Project.clangPath: String
+    get() {
+        this.logger.warn("${platformManager.hostPlatform.clang.binDir}: exists: ${File(platformManager.hostPlatform.clang.binDir).exists()}")
+        return platformManager.hostPlatform.clang.binDir
+    }
 
 val Project.kotlinNativeDist
     get() = rootProject.file(validPropertiesNames.firstOrNull{ hasProperty(it) }?.let{ findProperty(it) } ?: "dist")
