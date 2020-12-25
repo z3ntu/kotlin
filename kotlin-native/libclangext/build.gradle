@@ -39,6 +39,10 @@ model {
         dependsOn ":kotlin-native:dependencies:update"
         mustRunAfter ":kotlin-native:dependencies:update"
     }
+    tasks.compileClangextStaticLibraryClangextC {
+        dependsOn ":kotlin-native:dependencies:update"
+        mustRunAfter ":kotlin-native:dependencies:update"
+    }
     components {
         clangext(NativeLibrarySpec) {
             sources {

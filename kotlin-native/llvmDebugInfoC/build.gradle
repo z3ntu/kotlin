@@ -59,9 +59,7 @@ model {
     clang(Clang) {
       eachPlatform {
         cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-        clang(Clang) {
-          path UtilsKt.getClangPath(project)
-        }
+        path UtilsKt.getClangPath(project)
       }
     }
   }
