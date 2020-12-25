@@ -33,6 +33,7 @@ ext.isEnabled = PlatformInfo.isMac()
 model {
     tasks.compileClangextStaticLibraryClangextCpp {
         dependsOn ":kotlin-native:dependencies:update"
+        mustRunAfter ":kotlin-native:dependencies:update"
     }
     components {
         clangext(NativeLibrarySpec) {
@@ -60,9 +61,7 @@ model {
     clang(Clang) {
       eachPlatform {
           cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-          clang(Clang) {
-              path UtilsKt.getClangPath(project)
-          }
+          path UtilsKt.getClangPath(project)
       }
     }
   }
