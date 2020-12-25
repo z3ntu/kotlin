@@ -52,6 +52,7 @@ open class CompileToBitcodeExtension @Inject constructor(val project: Project) {
             ).configure {
                 group = BasePlugin.BUILD_GROUP
                 description = "Compiles '$name' to bitcode for $targetName"
+                dependsOn(":kotlin-native:dependencies:update")
                 configurationBlock()
             }
         }

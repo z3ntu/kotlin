@@ -565,6 +565,7 @@ gradle.taskGraph.whenReady {
 }
 
 val dist = tasks.register("dist") {
+    dependsOn(":kotlin-native:dependencies:update")
     dependsOn(":kotlin-compiler:dist")
 }
 
