@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.test.services.jvm
 import org.jetbrains.kotlin.backend.common.output.SimpleOutputFileCollection
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.output.writeAll
+import org.jetbrains.kotlin.codegen.ClassFileFactory
 import org.jetbrains.kotlin.test.model.ArtifactKinds
 import org.jetbrains.kotlin.test.model.TestModule
 import org.jetbrains.kotlin.test.services.TestService
@@ -17,21 +18,34 @@ import org.jetbrains.kotlin.test.services.dependencyProvider
 import java.io.File
 import java.nio.file.Files
 
-class CompiledJarManager(val testServices: TestServices) : TestService {
-    private val jarCache = mutableMapOf<TestModule, File>()
+class CompiledClassesManager(val testServices: TestServices) : TestService {
+    private val compiledKotlinCache = mutableMapOf<TestModule, File>()
+    private val compiledJavaCache = mutableMapOf<TestModule, File>()
 
-    fun getCompiledJarForModule(module: TestModule): File {
-        return jarCache.getOrPut(module) {
-            val outputDir = Files.createTempDirectory("module_${module.name}").toFile()
-            val classFileFactory = testServices.dependencyProvider.getArtifact(module, ArtifactKinds.Jvm).classFileFactory
+    fun getCompiledKotlinDirForModule(module: TestModule, classFileFactory: ClassFileFactory? = null): File {
+        return compiledKotlinCache.getOrPut(module) {
+            val outputDir = Files.createTempDirectory("module_${module.name}_kotlin-classes").toFile()
+
+            @Suppress("NAME_SHADOWING")
+            val classFileFactory = classFileFactory
+                ?: testServices.dependencyProvider.getArtifact(module, ArtifactKinds.Jvm).classFileFactory
             val outputFileCollection = SimpleOutputFileCollection(classFileFactory.currentOutput)
             val messageCollector = testServices.compilerConfigurationProvider.getCompilerConfiguration(module)
                 .getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY)
             outputFileCollection.writeAll(outputDir, messageCollector, reportOutputFiles = false)
-            classFileFactory.releaseGeneratedOutput()
             outputDir
+        }
+    }
+
+    fun getCompiledJavaDirForModule(module: TestModule): File? {
+        return compiledJavaCache[module]
+    }
+
+    fun getOrCreateCompiledJavaDirForModule(module: TestModule): File {
+        return compiledJavaCache.getOrPut(module) {
+            Files.createTempDirectory("module_${module.name}_java-classes").toFile()
         }
     }
 }
 
-val TestServices.compiledJarManager: CompiledJarManager by TestServices.testServiceAccessor()
+val TestServices.compiledClassesManager: CompiledClassesManager by TestServices.testServiceAccessor()
