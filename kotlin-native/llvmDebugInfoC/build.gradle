@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import org.jetbrains.kotlin.*
+
 apply plugin: "cpp"
 apply plugin: "c"
 
@@ -52,6 +54,9 @@ model {
     clang(Clang) {
       eachPlatform {
         cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+        clang(Clang) {
+          path UtilsKt.getClangPath(project)
+        }
       }
     }
   }

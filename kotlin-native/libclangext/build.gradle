@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.jetbrains.kotlin.*
 
 apply plugin: "cpp"
 apply plugin: "c"
@@ -58,7 +59,10 @@ model {
   toolChains {
     clang(Clang) {
       eachPlatform {
-        cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+          cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+          clang(Clang) {
+              path UtilsKt.getClangPath(project)
+          }
       }
     }
   }
