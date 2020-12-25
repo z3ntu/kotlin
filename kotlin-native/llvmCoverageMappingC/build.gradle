@@ -31,6 +31,10 @@ buildscript {
 import org.jetbrains.kotlin.konan.target.ClangArgs
 
 model {
+  tasks.assemble {
+    dependsOn ":kotlin-native:dependencies:update"
+    mustRunAfter ":kotlin-native:dependencies:update"
+  }
   tasks.compileCoverageMappingStaticLibraryCoverageMappingCpp {
     dependsOn ":kotlin-native:dependencies:update"
     mustRunAfter ":kotlin-native:dependencies:update"

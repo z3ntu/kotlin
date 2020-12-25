@@ -31,6 +31,10 @@ import org.jetbrains.kotlin.PlatformInfo
 ext.isEnabled = PlatformInfo.isMac()
 
 model {
+    tasks.assemble {
+        dependsOn ":kotlin-native:dependencies:update"
+        mustRunAfter ":kotlin-native:dependencies:update"
+    }
     tasks.compileClangextStaticLibraryClangextCpp {
         dependsOn ":kotlin-native:dependencies:update"
         mustRunAfter ":kotlin-native:dependencies:update"
