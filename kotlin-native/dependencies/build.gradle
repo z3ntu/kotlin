@@ -104,7 +104,7 @@ platformManager.enabled.each { target ->
     }
 }
 
-task update(type: Copy) {
+task update {
     dependsOn tasks.withType(NativeDep)
     mustRunAfter(tasks.withType(NativeDep))
 }
