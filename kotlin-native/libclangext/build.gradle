@@ -32,12 +32,10 @@ ext.isEnabled = PlatformInfo.isMac()
 
 model {
     tasks.assemble {
-        dependsOn rootProject.project(":kotlin-native").ext.nativeDependencies
-        mustRunAfter rootProject.project(":kotlin-native").ext.nativeDependencies
+        UtilsKt.configureNativePluginTask(project, delegate)
     }
     tasks.compileClangextStaticLibraryClangextCpp {
-        dependsOn rootProject.project(":kotlin-native").ext.nativeDependencies
-        mustRunAfter rootProject.project(":kotlin-native").ext.nativeDependencies
+        UtilsKt.configureNativePluginTask(project, delegate)
     }
     components {
         clangext(NativeLibrarySpec) {

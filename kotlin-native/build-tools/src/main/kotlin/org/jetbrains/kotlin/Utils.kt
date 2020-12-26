@@ -7,6 +7,9 @@ package org.jetbrains.kotlin
 
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.tasks.TaskState
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.TaskCollection
 import org.jetbrains.kotlin.konan.properties.loadProperties
 import org.jetbrains.kotlin.konan.properties.propertyList
 import org.jetbrains.kotlin.konan.properties.saveProperties
@@ -59,6 +62,34 @@ val Project.clangPath: String
         this.logger.warn("${platformManager.hostPlatform.clang.binDir}: exists: ${File(platformManager.hostPlatform.clang.binDir).exists()}")
         return platformManager.hostPlatform.clang.binDir
     }
+
+fun TaskState.str() = buildString {
+    append("state: ")
+    if (this@toString.executed)
+        append("executed")
+    this@toString.failure?.let {
+        append("failure: ${it.message}")
+    }
+    if (this@toString.didWork)
+        append("did-work")
+    if (this@toString.skipped)
+        append("skipped")
+    if (this@toString.upToDate)
+        append("up-to-date")
+    if (this@toString.noSource)
+        append("no-source")
+}
+
+fun Project.configureNativePluginTask(task:Task) {
+    val dependancies = rootProject.project(":kotlin-native").ext["nativeDependencies"] as TaskCollection<*>
+    if(logger.isEnabled(LogLevel.INFO)) {
+        dependancies.forEach {
+            logger.info("dependancies($name): ${it.name} ${it.state.str()}")
+        }
+    }
+    task.dependsOn(dependancies)
+    task.mustRunAfter(dependancies)
+}
 
 val Project.kotlinNativeDist
     get() = rootProject.file(validPropertiesNames.firstOrNull{ hasProperty(it) }?.let{ findProperty(it) } ?: "dist")
