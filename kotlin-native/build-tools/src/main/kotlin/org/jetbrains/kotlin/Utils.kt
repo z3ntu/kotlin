@@ -65,18 +65,18 @@ val Project.clangPath: String
 
 fun TaskState.str() = buildString {
     append("state: ")
-    if (this@toString.executed)
+    if (this@str.executed)
         append("executed")
-    this@toString.failure?.let {
+    this@str.failure?.let {
         append("failure: ${it.message}")
     }
-    if (this@toString.didWork)
+    if (this@str.didWork)
         append("did-work")
-    if (this@toString.skipped)
+    if (this@str.skipped)
         append("skipped")
-    if (this@toString.upToDate)
+    if (this@str.upToDate)
         append("up-to-date")
-    if (this@toString.noSource)
+    if (this@str.noSource)
         append("no-source")
 }
 
