@@ -76,7 +76,7 @@ if (libclangextIsEnabled) {
 
 
 model {
-    tasks.compileClangstubsSharedLibraryClangstubsC{
+    tasks.compileClangstubsSharedLibraryClangstubsC {
         dependsOn ":kotlin-native:dependencies:update"
         mustRunAfter ":kotlin-native:dependencies:update"
     }

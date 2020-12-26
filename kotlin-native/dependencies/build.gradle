@@ -106,6 +106,7 @@ platformManager.enabled.each { target ->
 
 task update(type: Copy) {
     dependsOn tasks.withType(NativeDep)
+    mustRunAfter(tasks.withType(NativeDep))
 }
 
 task rmDotKonan(type: Delete) {
