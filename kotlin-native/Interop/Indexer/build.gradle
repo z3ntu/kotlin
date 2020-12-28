@@ -34,7 +34,7 @@ apply plugin: 'cpp'
 import org.jetbrains.kotlin.konan.target.ClangArgs
 
 final Project libclangextProject = project(":kotlin-native:libclangext")
-final String libclangextTask = libclangextProject.path + ":build"
+final String libclangextTask = libclangextProject.path + ":compileClangextStaticLibraryClangextCpp"
 File libclangextDir = new File(libclangextProject.buildDir, "libs/clangext/static")
 final boolean libclangextIsEnabled = libclangextProject.isEnabled
 
