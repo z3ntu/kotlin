@@ -118,7 +118,8 @@ class DependencyProcessor(dependenciesRoot: File,
             properties.dependencies,
             dependenciesUrl,
             keepUnstable = keepUnstable,
-            archiveType = archiveType)
+            archiveType = archiveType,
+            customProgressCallback = customProgressCallback)
 
     constructor(dependenciesRoot: File,
                 properties: Properties,
