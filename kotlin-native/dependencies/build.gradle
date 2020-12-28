@@ -41,7 +41,7 @@ class NativeDep extends DefaultTask {
     @TaskAction
     void downloadAndExtract() {
         def downloader = new DependencyProcessor(baseOutDir, konanPropertiesLoader, baseUrl, false, ArchiveType.systemDefault, { url, currentBytes, totalBytes ->
-            print("\n$name Downloading dependency: $url (${currentBytes.humanReadable}/${totalBytes.humanReadable}). ")
+            print("\n$name Downloading dependency: $url (${currentBytes}/${totalBytes}). ")
     })
         downloader.showInfo = project.logger.isEnabled(LogLevel.INFO)
         downloader.run()
@@ -95,7 +95,7 @@ platformManager.enabled.each { target ->
             false,
             ArchiveType.systemDefault,
     { url, currentBytes, totalBytes ->
-            print("\n(no-task) Downloading dependency: $url (${currentBytes.humanReadable}/${totalBytes.humanReadable}). ")
+            print("\n(no-task) Downloading dependency: $url (${currentBytes}/${totalBytes}). ")
     })
 
     DependencyKind.values().each { kind ->
