@@ -103,11 +103,11 @@ model {
 
   toolChains {
     clang(Clang) {
-      eachPlatform {
-          cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-          cCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-          path UtilsKt.getClangPath(project)
-      }
+        path UtilsKt.getClangPath(project)
+        eachPlatform {
+            cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+            cCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+        }
     }
   }
 }

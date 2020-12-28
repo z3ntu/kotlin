@@ -64,9 +64,9 @@ model {
 
   toolChains {
     clang(Clang) {
+      path UtilsKt.getClangPath(project)
       eachPlatform {
         cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-        path UtilsKt.getClangPath(project)
       }
     }
   }

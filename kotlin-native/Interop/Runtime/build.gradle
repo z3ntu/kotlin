@@ -55,10 +55,10 @@ model {
 
    toolChains {
      clang(Clang) {
-       eachPlatform {
-           cCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
-           path UtilsKt.getClangPath(project)
-       }
+         path UtilsKt.getClangPath(project)
+         eachPlatform {
+             cCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
+         }
      }
    }
 }
