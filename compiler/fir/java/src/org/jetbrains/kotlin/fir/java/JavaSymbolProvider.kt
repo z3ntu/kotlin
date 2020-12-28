@@ -120,13 +120,8 @@ class JavaSymbolProvider(
         }
     }
 
-    override fun getClassLikeSymbolByFqName(classId: ClassId): FirRegularClassSymbol? {
-        return try {
-            getFirJavaClass(classId)
-        } catch (e: ProcessCanceledException) {
-            null
-        }
-    }
+    override fun getClassLikeSymbolByFqName(classId: ClassId): FirRegularClassSymbol? =
+        getFirJavaClass(classId)
 
     fun getFirJavaClass(classId: ClassId, content: KotlinClassFinder.Result.ClassFileContent? = null): FirRegularClassSymbol? {
         if (!hasTopLevelClassOf(classId)) return null
@@ -504,16 +499,10 @@ class JavaSymbolProvider(
         isNullable = false,
     )
 
-    override fun getPackage(fqName: FqName): FqName? {
-        return packageCache.lookupCacheOrCalculate(fqName) {
-            try {
-                val facade = KotlinJavaPsiFacade.getInstance(project)
-                val javaPackage = facade.findPackage(fqName.asString(), searchScope) ?: return@lookupCacheOrCalculate null
-                FqName(javaPackage.qualifiedName)
-            } catch (e: ProcessCanceledException) {
-                return@lookupCacheOrCalculate null
-            }
-        }
+    override fun getPackage(fqName: FqName): FqName? = packageCache.lookupCacheOrCalculate(fqName) {
+        val facade = KotlinJavaPsiFacade.getInstance(project)
+        val javaPackage = facade.findPackage(fqName.asString(), searchScope) ?: return@lookupCacheOrCalculate null
+        FqName(javaPackage.qualifiedName)
     }
 
     private val knownClassNamesInPackage = mutableMapOf<FqName, Set<String>?>()
