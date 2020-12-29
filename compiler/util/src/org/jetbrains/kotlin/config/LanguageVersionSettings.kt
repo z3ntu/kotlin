@@ -144,6 +144,7 @@ enum class LanguageFeature(
 
     AllowSealedInheritorsInDifferentFilesOfSamePackage(KOTLIN_1_5),
     SealedInterfaces(KOTLIN_1_5),
+    PackagePrivateFileClassesWithAllPrivateMembers(KOTLIN_1_5, defaultState = State.DISABLED),
 
     /*
      * Improvements include the following:
