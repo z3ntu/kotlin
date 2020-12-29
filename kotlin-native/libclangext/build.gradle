@@ -35,10 +35,15 @@ model {
         UtilsKt.configureNativePluginTask(project, delegate)
     }
     tasks.compileClangextStaticLibraryClangextCpp {
+        println(">compileClangextStaticLibraryClangextCpp: this:${this.class}, delegate: ${delegate.class} owner: ${owner.class}")
         UtilsKt.configureNativePluginTask(project, delegate)
     }
+    //"name" {
+    //    println(">model: this:${this.class}, delegate: ${delegate.class} owner: ${owner.class}")
+    //}
     components {
         clangext(NativeLibrarySpec) {
+            println(">components: this:${this.class}, delegate: ${delegate.class} owner: ${owner.class}")
             sources {
                 cpp {
                     source.srcDirs "src/main/cpp"
@@ -60,7 +65,9 @@ model {
     }
 
   toolChains {
+      println(">toolchain: this:${this.class}, delegate: ${delegate.class} owner: ${owner.class}")
     clang(Clang) {
+        println(">Clang: this:${this.class}, delegate: ${delegate.class} owner: ${owner.class}")
         path UtilsKt.getClangPath(project)
         eachPlatform {
             cppCompiler.withArguments(ClangArgs.&filterGradleNativeSoftwareFlags)
