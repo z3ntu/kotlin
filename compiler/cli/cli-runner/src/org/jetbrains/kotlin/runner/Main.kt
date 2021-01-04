@@ -34,24 +34,29 @@ object Main {
         KOTLIN_HOME = File(home)
     }
 
+    enum class HowToRun {
+        GUESS, OBJECT, JAR, SCRIPT;
+
+        companion object {
+            const val validValues = "guess (default), object, jar, script (or .<script filename extension>)"
+        }
+    }
+
     private fun run(args: Array<String>) {
         val classpath = arrayListOf<URL>()
         val compilerClasspath = arrayListOf<URL>()
         var runner: Runner? = null
-        var collectingArguments = false
-        var collectingExpressions = false
-        var needsCompiler = false
         val arguments = arrayListOf<String>()
         val compilerArguments = arrayListOf<String>()
-        var expression: String? = null
         var noStdLib = false
         var noReflect = false
+        var howtorun = HowToRun.GUESS
 
-        fun setExpression(expr: String) {
-            if (expression == null) {
-                expression = expr
+        fun setRunner(newRunner: Runner) {
+            if (runner == null) {
+                runner = newRunner
             } else {
-                throw RunnerException("Only single -e/-expression argument supported")
+                throw AssertionError("Conflicting runner settings")
             }
         }
 
@@ -61,25 +66,15 @@ object Main {
 
             fun next(): String {
                 if (++i == args.size) {
-                    throw RunnerException("argument expected to $arg")
+                    printErrorAndExit("argument expected to $arg")
                 }
                 return args[i]
             }
 
-            if (collectingExpressions) {
-                if ("-expression" == arg || "-e" == arg) {
-                    setExpression(next())
-                    i++
-                    continue
-                } else {
-                    collectingArguments = true
+            fun restAsArguments() {
+                for (j in i+1 until args.size) {
+                    arguments.add(args[j])
                 }
-            }
-
-            if (collectingArguments) {
-                arguments.add(arg)
-                i++
-                continue
             }
 
             if ("-help" == arg || "-h" == arg) {
@@ -98,10 +93,29 @@ object Main {
                     compilerClasspath.addPath(path)
                 }
             }
+            else if ("-howtorun" == arg) {
+                if (howtorun != HowToRun.GUESS) {
+                    printErrorAndExit("-howtorun is already set to ${howtorun.name.toLowerCase()}")
+                }
+                val howToRunArg = next()
+                if (howToRunArg.startsWith(".")) {
+                    howtorun = HowToRun.SCRIPT
+                    compilerArguments.add("-Xdefault-script-extension=$howToRunArg")
+                } else {
+                    try {
+                        howtorun = HowToRun.valueOf(howToRunArg.toUpperCase())
+                    } catch (e: IllegalArgumentException) {
+                        printErrorAndExit("Invalid argument to the option -howtorun, valid arguments are: ${HowToRun.validValues}")
+                    }
+                }
+            }
             else if ("-expression" == arg || "-e" == arg) {
-                setExpression(next())
-                collectingExpressions = true
-                needsCompiler = true
+                if (howtorun != HowToRun.GUESS && howtorun != HowToRun.SCRIPT) {
+                    printErrorAndExit("Expression evaluation is not compatible with -howtorun argument ${howtorun.name.toLowerCase()}")
+                }
+                setRunner(ExpressionRunner(next()))
+                restAsArguments()
+                break
             }
             else if ("-no-stdlib" == arg) {
                 noStdLib = true
@@ -115,20 +129,22 @@ object Main {
                 compilerArguments.add(arg)
             }
             else if (arg.startsWith("-")) {
-                throw RunnerException("unsupported argument: $arg")
+                printErrorAndExit("unknown option: $arg")
             }
-            else if (arg.endsWith(".jar")) {
-                runner = JarRunner(arg)
-                collectingArguments = true
+            else if (howtorun == HowToRun.JAR || (howtorun == HowToRun.GUESS && arg.endsWith(".jar"))) {
+                setRunner(JarRunner(arg))
+                restAsArguments()
+                break
             }
-            else if (arg.endsWith(".kts")) {
-                runner = ScriptRunner(arg)
-                collectingArguments = true
-                needsCompiler = true
+            else if (howtorun == HowToRun.SCRIPT || (howtorun == HowToRun.GUESS && arg.endsWith(".kts"))) {
+                setRunner(ScriptRunner(arg))
+                restAsArguments()
+                break
             }
             else {
-                runner = MainClassRunner(arg)
-                collectingArguments = true
+                setRunner(MainClassRunner(arg))
+                restAsArguments()
+                break
             }
             i++
         }
@@ -145,20 +161,17 @@ object Main {
             classpath.addPath("$KOTLIN_HOME/lib/kotlin-reflect.jar")
         }
 
-        if (expression != null) {
-            runner = ExpressionRunner(expression!!)
-        } else if (runner == null) {
-            runner = ReplRunner()
-            needsCompiler = true
+        if (runner == null) {
+            setRunner(ReplRunner())
         }
 
-        if (needsCompiler && compilerClasspath.isEmpty()) {
+        if (runner is RunnerWithCompiler && compilerClasspath.isEmpty()) {
             findCompilerJar(this::class.java, KOTLIN_HOME.resolve("lib")).forEach {
                 compilerClasspath.add(it.absoluteFile.toURI().toURL())
             }
         }
 
-        runner.run(classpath, compilerArguments, arguments, compilerClasspath)
+        runner!!.run(classpath, compilerArguments, arguments, compilerClasspath)
     }
 
     private fun MutableList<URL>.addPath(path: String) {
@@ -180,15 +193,9 @@ object Main {
         println("""kotlin: run Kotlin programs, scripts or REPL.
 
 Usage: kotlin <options> <command> [<arguments>]
-where command may be one of:
-  foo.Bar                    Runs the 'main' function from the class with the given qualified name
-                             (compiler arguments are ignored) 
-  app.jar                    Runs the given JAR file as 'java -jar' would do
-                             (compiler arguments are ignored and no Kotlin stdlib is added to the classpath)
-  script.kts                 Compiles and runs the given script, passing <arguments> to it
-  -expression (-e) '2+2'     Evaluates the expression and prints the result, passing <arguments> to it
-  <no command>               Runs Kotlin REPL, passing <arguments> to it
-and possible options include:
+where possible options include:
+  -howtorun <value>          How to run the supplied command with arguments, 
+                             valid values: ${HowToRun.validValues}
   -classpath (-cp) <path>    Paths where to find user class files
   -Dname=value               Set a system JVM property
   -J<option>                 Pass an option directly to JVM
@@ -197,6 +204,15 @@ and possible options include:
   -X<flag>[=value]           Pass -X argument to the compiler
   -version                   Display Kotlin version
   -help (-h)                 Print a synopsis of options
+and command is interpreted according to the -howtorun option argument 
+or, in case of guess, according to the following rules:
+  foo.Bar                    Runs the 'main' function from the class with the given qualified name
+                             (compiler arguments are ignored) 
+  app.jar                    Runs the given JAR file as 'java -jar' would do
+                             (compiler arguments are ignored and no Kotlin stdlib is added to the classpath)
+  script.kts                 Compiles and runs the given script, passing <arguments> to it
+  -expression (-e) '2+2'     Evaluates the expression and prints the result, passing <arguments> to it
+  <no command>               Runs Kotlin REPL, passing <arguments> to it
 """)
         exitProcess(0)
     }
@@ -211,5 +227,10 @@ and possible options include:
 
         println("Kotlin version " + version + " (JRE " + System.getProperty("java.runtime.version") + ")")
         exitProcess(0)
+    }
+
+    private fun printErrorAndExit(message: String) {
+        System.err.println(message)
+        exitProcess(1)
     }
 }

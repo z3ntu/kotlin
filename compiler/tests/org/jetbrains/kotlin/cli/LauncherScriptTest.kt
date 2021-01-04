@@ -258,4 +258,56 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
             workDirectory = tmpdir, expectedStdout = "OK\n"
         )
     }
+
+    fun testHowToRunExpression() {
+        runProcess(
+            "kotlin", "-howtorun", "jar", "-e", "println(args.joinToString())", "-a", "b",
+            expectedExitCode = 1, expectedStderrContains = Regex("Expression evaluation is not compatible with -howtorun argument jar")
+        )
+        runProcess(
+            "kotlin", "-howtorun", "script", "-e", "println(args.joinToString())", "-a", "b",
+            expectedStdout = "-a, b\n"
+        )
+    }
+
+    fun testHowToRunScript() {
+        runProcess(
+            "kotlin", "-howtorun", "object", "$testDataDirectory/printargs.kts", "--", "-a", "b",
+            expectedExitCode = 1, expectedStderrContains = Regex("error: could not find or load main class .*printargs\\.kts")
+        )
+        runProcess(
+            "kotlin", "-howtorun", "script", "$testDataDirectory/printargs.kts", "--", "-a", "b",
+            expectedStdout = "-a, b\n"
+        )
+    }
+
+    fun testHowToRunCustomScript() {
+        runProcess(
+            "kotlin", "$testDataDirectory/funWithResultReturn.myscript",
+            expectedExitCode = 1, expectedStderrContains = Regex("error: could not find or load main class .*funWithResultReturn\\.myscript")
+        )
+        runProcess(
+            "kotlin", "-howtorun", "script", "$testDataDirectory/funWithResultReturn.myscript",
+            expectedExitCode = 1, expectedStderrContains = Regex("unrecognized script type: funWithResultReturn\\.myscript")
+        )
+        runProcess(
+            "kotlin", "-howtorun", ".kts", "$testDataDirectory/funWithResultReturn.myscript",
+            expectedExitCode = 1, expectedStderrContains = Regex("error: unresolved reference: CompilerOptions")
+        )
+        runProcess(
+            "kotlin", "-howtorun", ".main.kts", "$testDataDirectory/funWithResultReturn.myscript",
+            expectedStdout = "42\n"
+        )
+    }
+
+    fun testHowToRunObject() {
+        runProcess("kotlinc", "$testDataDirectory/helloWorld.kt", "-d", tmpdir.path)
+
+        runProcess(
+            "kotlin", "-howtorun", "jar", "test.HelloWorldKt", workDirectory = tmpdir,
+            expectedExitCode = 1,
+            expectedStderrContains = Regex("error: could not read manifest from test\\.HelloWorldKt: test\\.HelloWorldKt")
+        )
+        runProcess("kotlin", "-howtorun", "object", "test.HelloWorldKt", expectedStdout = "Hello!\n", workDirectory = tmpdir)
+    }
 }
