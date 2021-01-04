@@ -31,7 +31,8 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
         executableName: String,
         vararg args: String,
         expectedStdout: String = "",
-        expectedStderr: String = "",
+        expectedStderr: String? = null,
+        expectedStderrContains: Regex? = null,
         expectedExitCode: Int = 0,
         workDirectory: File? = null
     ) {
@@ -55,7 +56,12 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
         val exitCode = process.exitValue()
         try {
             assertEquals(expectedStdout, stdout)
-            assertEquals(expectedStderr, stderr)
+            if (expectedStderrContains != null) {
+                assertTrue(stderr.contains(expectedStderrContains))
+            }
+            if (expectedStderr != null) {
+                assertEquals(expectedStderr, stderr)
+            }
             assertEquals(expectedExitCode, exitCode)
         } catch (e: Throwable) {
             System.err.println("exit code $exitCode")
@@ -226,6 +232,14 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
         )
 
         runProcess("kotlin", "LegacyAssertEnabledKt", "-J-ea:kotlin._Assertions", workDirectory = tmpdir)
+    }
+
+    fun testScriptWithXArguments() {
+        runProcess(
+            "kotlin", "$testDataDirectory/funWithResultReturn.kts",
+            expectedExitCode = 1, expectedStderrContains = Regex("error: 'kotlin.Result' cannot be used as a return type")
+        )
+        runProcess("kotlin", "-Xallow-result-return-type", "$testDataDirectory/funWithResultReturn.kts", expectedStdout = "42\n")
     }
 
     fun testProperty() {
