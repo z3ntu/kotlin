@@ -9472,6 +9472,11 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             runTest("compiler/testData/codegen/box/enum/asReturnExpression.kt");
         }
 
+        @TestMetadata("bigEnum.kt")
+        public void testBigEnum() throws Exception {
+            runTest("compiler/testData/codegen/box/enum/bigEnum.kt");
+        }
+
         @TestMetadata("companionAccessingEnumValue.kt")
         public void testCompanionAccessingEnumValue() throws Exception {
             runTest("compiler/testData/codegen/box/enum/companionAccessingEnumValue.kt");
