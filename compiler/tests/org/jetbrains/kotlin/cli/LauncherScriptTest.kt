@@ -242,6 +242,14 @@ class LauncherScriptTest : TestCaseWithTmpdir() {
         runProcess("kotlin", "-Xallow-result-return-type", "$testDataDirectory/funWithResultReturn.kts", expectedStdout = "42\n")
     }
 
+    fun testNoStdLib() {
+        runProcess("kotlin", "-e", "println(42)", expectedStdout = "42\n")
+        runProcess(
+            "kotlin", "-no-stdlib", "-e", "println(42)",
+            expectedExitCode = 1, expectedStderrContains = Regex("error: unresolved reference: println")
+        )
+    }
+
     fun testProperty() {
         runProcess("kotlinc", "$testDataDirectory/property.kt", "-d", tmpdir.path)
 
